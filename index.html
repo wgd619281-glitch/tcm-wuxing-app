@@ -904,16 +904,43 @@ const App = {
   },
 
   // ═══ 初始化 ═══
+  // 在线数据源（GitHub Pages 热更新）
+  REMOTE_BASE: 'https://wgd619281-glitch.github.io/tcm-wuxing-app',
+  REMOTE_DATA_URL: 'https://wgd619281-glitch.github.io/tcm-wuxing-app/assets/data/herbs.json',
+
   async init() {
     try {
-      // 优先使用 script 标签预加载的全局变量（避免 CORS 问题）
-      let data;
-      if (window.HERBS_DATA) {
+      let data = null;
+
+      // 优先从在线获取最新数据（热更新）
+      try {
+        const res = await fetch(this.REMOTE_DATA_URL, { cache: 'no-cache' });
+        if (res.ok) {
+          data = await res.json();
+          // 缓存到 localStorage 供离线使用
+          localStorage.setItem('tcm_herbs_cache', JSON.stringify(data));
+        }
+      } catch(netErr) {
+        // 网络失败，静默回退
+      }
+
+      // 回退1：使用 localStorage 缓存
+      if (!data) {
+        const cached = localStorage.getItem('tcm_herbs_cache');
+        if (cached) data = JSON.parse(cached);
+      }
+
+      // 回退2：使用内置全局变量
+      if (!data && window.HERBS_DATA) {
         data = window.HERBS_DATA;
-      } else {
+      }
+
+      // 回退3：fetch 本地文件
+      if (!data) {
         const res = await fetch('assets/data/herbs.json');
         data = await res.json();
       }
+
       this.herbs = data.herbs;
       this.favorites = JSON.parse(localStorage.getItem('tcm_favs') || '[]');
       this.renderAll();
