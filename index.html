@@ -67,6 +67,10 @@ body {
   line-height: 1.6;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  /* GPU加速：减少滚动卡顿 */
+  -webkit-overflow-scrolling: touch;
+  text-rendering: optimizeSpeed;
+  -webkit-text-rendering: optimizeLegibility;
 }
 
 /* ═══ App 框架 ═══ */
@@ -117,12 +121,37 @@ body {
 }
 .header-btn:active { background: var(--bg3); }
 
+/* ═══ 返回按钮 ═══ */
+.header-back {
+  width: 34px; height: 34px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xs);
+  color: var(--ink);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .2s, background .15s;
+  flex: none;
+}
+.header-back.visible {
+  opacity: 1;
+  pointer-events: auto;
+}
+.header-back:active { background: var(--bg3); }
+.header-back svg { width: 22px; height: 22px; }
+
 /* ═══ Tab 内容区 ═══ */
 .tab-content {
   display: none;
   padding: 16px 14px calc(var(--tab-h) + var(--safe-bottom) + 20px);
   min-height: calc(100vh - var(--header-h));
-  animation: fadeIn .25s ease;
+  animation: fadeIn .15s ease;
+  contain: layout style;
+  overscroll-behavior: contain;
 }
 .tab-content.active { display: block; }
 @keyframes fadeIn {
@@ -239,6 +268,7 @@ body {
 .herb-list {
   display: grid;
   gap: 10px;
+  contain: layout style;
 }
 .herb-item {
   background: var(--bg2);
@@ -249,9 +279,20 @@ body {
   display: flex;
   align-items: flex-start;
   gap: 12px;
-  transition: box-shadow .2s, transform .1s;
+  transition: box-shadow .15s;
   position: relative;
   overflow: hidden;
+  contain: layout style;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+}
+.herb-item:active { background: var(--bg3); }
+.load-more {
+  text-align: center;
+  padding: 16px;
+  font-size: .8rem;
+  color: var(--muted);
+  contain: layout style;
 }
 .herb-item::before {
   content: '';
@@ -264,7 +305,6 @@ body {
 .herb-item.earth::before { background: var(--earth); }
 .herb-item.metal::before { background: var(--metal); }
 .herb-item.water::before { background: var(--water); }
-.herb-item:active { transform: scale(.985); box-shadow: var(--shadow); }
 .herb-item .wx-tag {
   flex: none;
   width: 32px; height: 32px;
@@ -422,9 +462,13 @@ body {
   background: var(--bg);
   border-radius: 20px 20px 0 0;
   z-index: 301;
-  transition: transform .3s cubic-bezier(.32,.72,0,1);
+  transition: transform .25s cubic-bezier(.32,.72,0,1);
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;
+  will-change: transform;
+  -webkit-backface-visibility: hidden;
+  backface-visibility: hidden;
+  overscroll-behavior: contain;
 }
 .detail-panel.show {
   transform: translateX(-50%) translateY(0);
@@ -774,6 +818,9 @@ body {
 <div id="app">
   <!-- 顶部标题栏 -->
   <div class="app-header">
+    <div class="header-back" id="header-back" onclick="App.goBack()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"></polyline></svg>
+    </div>
     <div class="title" id="app-title"><span class="wx">药库</span></div>
     <div class="header-actions">
       <button class="header-btn" onclick="App.switchTab('search')">🔍</button>
@@ -841,6 +888,7 @@ body {
 const App = {
   herbs: [],
   favorites: [],
+  currentTab: 'herbs',
   currentWuxing: 'all',
   currentCategory: '',
   currentStroke: null,
@@ -886,13 +934,15 @@ const App = {
       });
     });
 
-    // 搜索
+    // 搜索（防抖优化）
     const searchInput = document.getElementById('search-input');
     const clearBtn = document.getElementById('search-clear');
+    let searchTimer = null;
     searchInput.addEventListener('input', (e) => {
       this.searchKeyword = e.target.value.trim();
       clearBtn.style.display = this.searchKeyword ? 'flex' : 'none';
-      this.renderSearchResults();
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => this.renderSearchResults(), 200);
     });
     clearBtn.addEventListener('click', () => {
       searchInput.value = '';
@@ -901,11 +951,53 @@ const App = {
       this.renderSearchResults();
     });
 
+    // 事件委托：药物列表点击
+    document.getElementById('herb-list').addEventListener('click', (e) => {
+      const item = e.target.closest('.herb-item');
+      if (item) this.showDetail(item.dataset.id);
+    });
+
+    // 事件委托：搜索结果点击
+    document.getElementById('search-results').addEventListener('click', (e) => {
+      const item = e.target.closest('.herb-item');
+      if (item) this.showDetail(item.dataset.id);
+    });
+
+    // 滚动加载更多
+    let scrollTimer = null;
+    window.addEventListener('scroll', () => {
+      if (scrollTimer) return;
+      scrollTimer = setTimeout(() => {
+        scrollTimer = null;
+        if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 200) {
+          const activeTab = document.querySelector('.tab-content.active');
+          if (!activeTab) return;
+          if (activeTab.id === 'tab-herbs') {
+            const loader = activeTab.querySelector('.load-more');
+            if (loader) {
+              loader.remove();
+              this.renderHerbPage(document.getElementById('herb-list'));
+            }
+          } else if (activeTab.id === 'tab-search') {
+            const loader = activeTab.querySelector('.load-more');
+            if (loader) {
+              loader.remove();
+              this.renderSearchPage(document.getElementById('search-results'));
+            }
+          }
+        }
+      }, 100);
+    }, { passive: true });
+
+    // 左边缘滑动返回
+    this._bindEdgeSwipeBack();
+
     // 详情关闭：✕按钮 + 下拉手势 + 遮罩点击（三种方式）
   },
 
   // ═══ Tab 切换 ═══
   switchTab(tab) {
+    this.currentTab = tab;
     document.querySelectorAll('.tab-item').forEach(t => t.classList.remove('active'));
     document.querySelector(`.tab-item[data-tab="${tab}"]`).classList.add('active');
     document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
@@ -914,6 +1006,114 @@ const App = {
     const titles = { herbs: '药库', search: '检索', theory: '学堂', profile: '我的' };
     document.getElementById('app-title').innerHTML = `<span class="wx">${titles[tab] || ''}</span>`;
     window.scrollTo(0, 0);
+    this.updateBackButton();
+  },
+
+  // ═══ 返回上一层 ═══
+  canGoBack() {
+    const panel = document.getElementById('detail-panel');
+    return !!(
+      (panel && panel.classList.contains('show')) ||
+      this.currentCategory ||
+      this.currentWuxing !== 'all' ||
+      this.searchKeyword ||
+      this.currentTab !== 'herbs'
+    );
+  },
+
+  goBack() {
+    // 优先级1：关闭详情面板
+    const panel = document.getElementById('detail-panel');
+    if (panel && panel.classList.contains('show')) {
+      this.closeDetail();
+      return;
+    }
+
+    // 优先级2：清除分类筛选
+    if (this.currentCategory) {
+      this.currentCategory = '';
+      this.renderCategoryFilter();
+      this.renderHerbList();
+      return;
+    }
+
+    // 优先级3：清除五行筛选
+    if (this.currentWuxing !== 'all') {
+      this.currentWuxing = 'all';
+      document.querySelectorAll('.wx-chip').forEach(c => c.classList.remove('active'));
+      const allChip = document.querySelector('.wx-chip[data-wx="all"]');
+      if (allChip) allChip.classList.add('active');
+      this.renderCategoryFilter();
+      this.renderHerbList();
+      return;
+    }
+
+    // 优先级4：清除搜索关键词
+    if (this.searchKeyword) {
+      this.searchKeyword = '';
+      const searchInput = document.getElementById('search-input');
+      if (searchInput) searchInput.value = '';
+      const clearBtn = document.getElementById('search-clear');
+      if (clearBtn) clearBtn.style.display = 'none';
+      this.renderSearchResults();
+      return;
+    }
+
+    // 优先级5：切回药库 Tab
+    if (this.currentTab !== 'herbs') {
+      this.switchTab('herbs');
+      return;
+    }
+  },
+
+  // ═══ 更新返回按钮显示状态 ═══
+  updateBackButton() {
+    const btn = document.getElementById('header-back');
+    if (!btn) return;
+
+    const panel = document.getElementById('detail-panel');
+    const shouldShow =
+      (panel && panel.classList.contains('show')) ||
+      !!this.currentCategory ||
+      this.currentWuxing !== 'all' ||
+      !!this.searchKeyword ||
+      this.currentTab !== 'herbs';
+
+    btn.classList.toggle('visible', shouldShow);
+  },
+
+  // ═══ 左边缘滑动返回手势 ═══
+  _bindEdgeSwipeBack() {
+    let startX = 0, startY = 0, tracking = false;
+
+    const onStart = (e) => {
+      const touch = e.touches ? e.touches[0] : e;
+      // 仅在屏幕左边缘 30px 范围内触发
+      if (touch.clientX < 30) {
+        // 详情面板打开时不拦截（由面板自身手势处理）
+        const panel = document.getElementById('detail-panel');
+        if (panel && panel.classList.contains('show')) return;
+        startX = touch.clientX;
+        startY = touch.clientY;
+        tracking = true;
+      }
+    };
+
+    const onEnd = (e) => {
+      if (!tracking) return;
+      tracking = false;
+      const touch = e.changedTouches ? e.changedTouches[0] : e;
+      const dx = touch.clientX - startX;
+      const dy = touch.clientY - startY;
+
+      // 向右滑动距离 > 80px，且水平移动远大于垂直移动
+      if (dx > 80 && Math.abs(dx) > Math.abs(dy) * 1.5) {
+        this.goBack();
+      }
+    };
+
+    document.addEventListener('touchstart', onStart, { passive: true });
+    document.addEventListener('touchend', onEnd, { passive: true });
   },
 
   // ═══ 渲染全部 ═══
@@ -987,6 +1187,10 @@ const App = {
   },
 
   // ═══ 药物列表 ═══
+  pageSize: 40,
+  renderedCount: 0,
+  currentFilteredList: [],
+
   renderHerbList() {
     const container = document.getElementById('herb-list');
     if (!container) return;
@@ -999,18 +1203,37 @@ const App = {
       filtered = filtered.filter(h => (h.category || '其他') === this.currentCategory);
     }
 
+    this.currentFilteredList = filtered;
+    this.renderedCount = 0;
+
     if (filtered.length === 0) {
       container.innerHTML = '<div class="empty-state"><div class="icon">🌿</div><div class="text">暂无药物</div></div>';
       return;
     }
 
-    container.innerHTML = filtered.map(h => this.herbItemHTML(h)).join('');
-    container.querySelectorAll('.herb-item').forEach(item => {
-      item.addEventListener('click', () => {
-        const id = item.dataset.id;
-        this.showDetail(id);
-      });
-    });
+    this.renderHerbPage(container);
+    this.updateBackButton();
+  },
+
+  renderHerbPage(container) {
+    const list = this.currentFilteredList;
+    const start = this.renderedCount;
+    const end = Math.min(start + this.pageSize, list.length);
+    const html = list.slice(start, end).map(h => this.herbItemHTML(h)).join('');
+
+    if (start === 0) {
+      container.innerHTML = html;
+    } else {
+      container.insertAdjacentHTML('beforeend', html);
+    }
+    this.renderedCount = end;
+
+    if (end < list.length) {
+      const loader = document.createElement('div');
+      loader.className = 'load-more';
+      loader.textContent = '上滑加载更多...';
+      container.appendChild(loader);
+    }
   },
 
   // ═══ 药物列表项 HTML ═══
@@ -1103,14 +1326,31 @@ const App = {
       return;
     }
 
-    container.innerHTML = `<div style="font-size:.78rem;color:var(--muted);margin-bottom:10px">找到 ${filtered.length} 味药</div>` +
-      filtered.map(h => this.herbItemHTML(h)).join('');
+    this.currentFilteredList = filtered;
+    this.renderedCount = 0;
 
-    container.querySelectorAll('.herb-item').forEach(item => {
-      item.addEventListener('click', () => {
-        this.showDetail(item.dataset.id);
-      });
-    });
+    const header = `<div style="font-size:.78rem;color:var(--muted);margin-bottom:10px">找到 ${filtered.length} 味药</div>`;
+    container.innerHTML = header;
+
+    this.renderSearchPage(container);
+    this.updateBackButton();
+  },
+
+  renderSearchPage(container) {
+    const list = this.currentFilteredList;
+    if (!list || list.length === 0) return;
+    const start = this.renderedCount;
+    const end = Math.min(start + this.pageSize, list.length);
+    const html = list.slice(start, end).map(h => this.herbItemHTML(h)).join('');
+    container.insertAdjacentHTML('beforeend', html);
+    this.renderedCount = end;
+
+    if (end < list.length) {
+      const loader = document.createElement('div');
+      loader.className = 'load-more';
+      loader.textContent = '上滑加载更多...';
+      container.appendChild(loader);
+    }
   },
 
   // ═══ 药物详情 ═══
@@ -1198,11 +1438,13 @@ const App = {
 
     // 下拉关闭手势
     this._bindSwipeToClose();
+    this.updateBackButton();
   },
 
   closeDetail() {
     document.getElementById('detail-overlay').classList.remove('show');
     document.getElementById('detail-panel').classList.remove('show');
+    this.updateBackButton();
   },
 
   // ═══ 下拉关闭手势 ═══
@@ -1390,9 +1632,10 @@ const App = {
       </div>
     `;
 
-    // 收藏列表点击
-    container.querySelectorAll('.herb-item').forEach(item => {
-      item.addEventListener('click', () => this.showDetail(item.dataset.id));
+    // 收藏列表点击（事件委托）
+    container.addEventListener('click', (e) => {
+      const item = e.target.closest('.herb-item');
+      if (item) this.showDetail(item.dataset.id);
     });
 
     // 毒麻药菜单
