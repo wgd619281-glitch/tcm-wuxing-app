@@ -1,0 +1,748 @@
+/* ═══════════════════════════════════════════
+   中药五行分类学习 App · 主样式表
+   ═══════════════════════════════════════════ */
+
+:root {
+  /* 基础色 */
+  --bg: #F6F4EE;
+  --bg2: #FFFFFF;
+  --bg3: #EFEDE6;
+  --ink: #1E2A26;
+  --ink2: #3D4A44;
+  --muted: #6B7A70;
+  --muted2: #9AA59E;
+  --rule: #E4DFD4;
+  --rule2: #D8D2C4;
+  --accent: #2F7D5B;
+  --accent2: #B5402E;
+  --accent-light: rgba(47,125,91,0.08);
+
+  /* 五行色 */
+  --wood: #4A8B5C;
+  --wood-bg: rgba(74,139,92,0.10);
+  --wood-border: rgba(74,139,92,0.25);
+  --fire: #C0392B;
+  --fire-bg: rgba(192,57,43,0.10);
+  --fire-border: rgba(192,57,43,0.25);
+  --earth: #C99A14;
+  --earth-bg: rgba(201,154,20,0.10);
+  --earth-border: rgba(201,154,20,0.25);
+  --metal: #8A7E64;
+  --metal-bg: rgba(138,126,100,0.10);
+  --metal-border: rgba(138,126,100,0.25);
+  --water: #2C5F7C;
+  --water-bg: rgba(44,95,124,0.10);
+  --water-border: rgba(44,95,124,0.25);
+
+  /* 尺寸 */
+  --tab-h: 62px;
+  --header-h: 52px;
+  --radius: 14px;
+  --radius-sm: 10px;
+  --radius-xs: 6px;
+  --shadow: 0 2px 12px rgba(30,42,38,0.06);
+  --shadow-lg: 0 8px 32px rgba(30,42,38,0.12);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; -webkit-tap-highlight-color: transparent; }
+html { font-size: 16px; -webkit-text-size-adjust: 100%; }
+body {
+  font-family: -apple-system, 'PingFang SC', 'Noto Sans CJK SC', 'Microsoft YaHei', sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.6;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ═══ App 框架 ═══ */
+#app {
+  max-width: 480px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: var(--bg);
+  position: relative;
+  box-shadow: 0 0 40px rgba(0,0,0,0.04);
+}
+
+/* ═══ 顶部标题栏 ═══ */
+.app-header {
+  height: var(--header-h);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 18px;
+  background: var(--bg2);
+  border-bottom: 1px solid var(--rule);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.app-header .title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+.app-header .title .wx { color: var(--accent); }
+.app-header .header-actions {
+  display: flex;
+  gap: 8px;
+}
+.header-btn {
+  width: 34px; height: 34px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-xs);
+  color: var(--muted);
+  font-size: 1.2rem;
+  transition: background .2s;
+}
+.header-btn:active { background: var(--bg3); }
+
+/* ═══ Tab 内容区 ═══ */
+.tab-content {
+  display: none;
+  padding: 16px 14px calc(var(--tab-h) + var(--safe-bottom) + 20px);
+  min-height: calc(100vh - var(--header-h));
+  animation: fadeIn .25s ease;
+}
+.tab-content.active { display: block; }
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* ═══ 底部 Tab 栏 ═══ */
+.tab-bar {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 100%;
+  max-width: 480px;
+  height: calc(var(--tab-h) + var(--safe-bottom));
+  padding-bottom: var(--safe-bottom);
+  background: var(--bg2);
+  border-top: 1px solid var(--rule);
+  display: flex;
+  z-index: 200;
+  box-shadow: 0 -2px 12px rgba(0,0,0,0.04);
+}
+.tab-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 3px;
+  cursor: pointer;
+  border: none;
+  background: none;
+  color: var(--muted2);
+  font-size: .72rem;
+  transition: color .2s;
+}
+.tab-item .icon {
+  font-size: 1.35rem;
+  line-height: 1;
+}
+.tab-item.active {
+  color: var(--accent);
+  font-weight: 600;
+}
+
+/* ═══ 五行选择条 ═══ */
+.wuxing-bar {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 14px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 0 2px;
+}
+.wuxing-bar::-webkit-scrollbar { display: none; }
+.wx-chip {
+  flex: none;
+  padding: 8px 18px;
+  border-radius: 20px;
+  font-size: .85rem;
+  font-weight: 600;
+  border: 1.5px solid var(--rule);
+  background: var(--bg2);
+  color: var(--muted);
+  cursor: pointer;
+  transition: all .2s;
+  white-space: nowrap;
+}
+.wx-chip .cnt {
+  font-size: .72rem;
+  font-weight: 400;
+  opacity: .7;
+  margin-left: 4px;
+}
+.wx-chip.active.wood { background: var(--wood); color: #fff; border-color: var(--wood); }
+.wx-chip.active.fire { background: var(--fire); color: #fff; border-color: var(--fire); }
+.wx-chip.active.earth { background: var(--earth); color: #fff; border-color: var(--earth); }
+.wx-chip.active.metal { background: var(--metal); color: #fff; border-color: var(--metal); }
+.wx-chip.active.water { background: var(--water); color: #fff; border-color: var(--water); }
+.wx-chip.active.all { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* ═══ 功效子类筛选 ═══ */
+.category-filter {
+  display: flex;
+  gap: 6px;
+  margin-bottom: 14px;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+  padding: 0 2px;
+}
+.category-filter::-webkit-scrollbar { display: none; }
+.cat-chip {
+  flex: none;
+  padding: 5px 12px;
+  border-radius: 14px;
+  font-size: .76rem;
+  border: 1px solid var(--rule);
+  background: var(--bg3);
+  color: var(--muted);
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all .15s;
+}
+.cat-chip.active {
+  background: var(--accent);
+  color: #fff;
+  border-color: var(--accent);
+}
+
+/* ═══ 药物列表 ═══ */
+.herb-list {
+  display: grid;
+  gap: 10px;
+}
+.herb-item {
+  background: var(--bg2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  cursor: pointer;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  transition: box-shadow .2s, transform .1s;
+  position: relative;
+  overflow: hidden;
+}
+.herb-item::before {
+  content: '';
+  position: absolute;
+  left: 0; top: 0; bottom: 0;
+  width: 4px;
+}
+.herb-item.wood::before { background: var(--wood); }
+.herb-item.fire::before { background: var(--fire); }
+.herb-item.earth::before { background: var(--earth); }
+.herb-item.metal::before { background: var(--metal); }
+.herb-item.water::before { background: var(--water); }
+.herb-item:active { transform: scale(.985); box-shadow: var(--shadow); }
+.herb-item .wx-tag {
+  flex: none;
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  font-weight: 700;
+  color: #fff;
+}
+.herb-item.wood .wx-tag { background: var(--wood); }
+.herb-item.fire .wx-tag { background: var(--fire); }
+.herb-item.earth .wx-tag { background: var(--earth); }
+.herb-item.metal .wx-tag { background: var(--metal); }
+.herb-item.water .wx-tag { background: var(--water); }
+.herb-item .info {
+  flex: 1;
+  min-width: 0;
+}
+.herb-item .name-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 3px;
+}
+.herb-item .name {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--ink);
+}
+.herb-item .tox-badge {
+  font-size: .62rem;
+  padding: 1px 5px;
+  border-radius: 4px;
+  font-weight: 600;
+  color: #fff;
+}
+.herb-item .tox-badge.big { background: var(--fire); }
+.herb-item .tox-badge.mid { background: #E67E22; }
+.herb-item .tox-badge.small { background: #F39C12; color: #fff; }
+.herb-item .cat {
+  font-size: .72rem;
+  color: var(--accent2);
+  font-weight: 500;
+}
+.herb-item .eff {
+  font-size: .8rem;
+  color: var(--muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ═══ 搜索框 ═══ */
+.search-box {
+  position: relative;
+  margin-bottom: 14px;
+}
+.search-box input {
+  width: 100%;
+  height: 44px;
+  padding: 0 16px 0 42px;
+  border: 1.5px solid var(--rule);
+  border-radius: 22px;
+  font-size: .9rem;
+  background: var(--bg2);
+  color: var(--ink);
+  outline: none;
+  transition: border-color .2s;
+}
+.search-box input:focus { border-color: var(--accent); }
+.search-box input::placeholder { color: var(--muted2); }
+.search-box .search-icon {
+  position: absolute;
+  left: 16px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--muted2);
+  font-size: 1rem;
+}
+.search-box .clear-btn {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 24px; height: 24px;
+  border: none;
+  background: var(--rule);
+  border-radius: 50%;
+  color: #fff;
+  cursor: pointer;
+  font-size: .8rem;
+  display: none;
+  align-items: center;
+  justify-content: center;
+}
+
+/* ═══ 笔画索引 ═══ */
+.stroke-index {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.stroke-chip {
+  padding: 5px 12px;
+  border-radius: 10px;
+  font-size: .76rem;
+  border: 1px solid var(--rule);
+  background: var(--bg2);
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all .15s;
+}
+.stroke-chip.active {
+  background: var(--ink);
+  color: #fff;
+  border-color: var(--ink);
+}
+.stroke-chip .sc { font-size: .68rem; opacity: .6; margin-left: 2px; }
+
+/* ═══ 空状态 ═══ */
+.empty-state {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--muted2);
+}
+.empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; opacity: .4; }
+.empty-state .text { font-size: .9rem; }
+
+/* ═══ 药物详情页 ═══ */
+.detail-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(30,42,38,0.4);
+  z-index: 300;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity .25s;
+}
+.detail-overlay.show {
+  opacity: 1;
+  pointer-events: auto;
+}
+.detail-panel {
+  position: fixed;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%) translateY(100%);
+  width: 100%;
+  max-width: 480px;
+  max-height: 88vh;
+  background: var(--bg);
+  border-radius: 20px 20px 0 0;
+  z-index: 301;
+  transition: transform .3s cubic-bezier(.32,.72,0,1);
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+.detail-panel.show {
+  transform: translateX(-50%) translateY(0);
+}
+.detail-handle {
+  width: 40px; height: 4px;
+  background: var(--rule2);
+  border-radius: 2px;
+  margin: 10px auto 0;
+}
+.detail-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+  width: 30px; height: 30px;
+  border: none;
+  background: var(--bg3);
+  border-radius: 50%;
+  font-size: 1.1rem;
+  color: var(--muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+.detail-hero {
+  padding: 20px 22px 16px;
+  position: relative;
+}
+.detail-hero .wx-deco {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 80px;
+  border-radius: 20px 20px 0 0;
+  opacity: .08;
+}
+.detail-hero.wood .wx-deco { background: var(--wood); }
+.detail-hero.fire .wx-deco { background: var(--fire); }
+.detail-hero.earth .wx-deco { background: var(--earth); }
+.detail-hero.metal .wx-deco { background: var(--metal); }
+.detail-hero.water .wx-deco { background: var(--water); }
+.detail-hero .wx-tag-lg {
+  width: 48px; height: 48px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+  margin-bottom: 12px;
+  position: relative;
+}
+.detail-hero.wood .wx-tag-lg { background: var(--wood); }
+.detail-hero.fire .wx-tag-lg { background: var(--fire); }
+.detail-hero.earth .wx-tag-lg { background: var(--earth); }
+.detail-hero.metal .wx-tag-lg { background: var(--metal); }
+.detail-hero.water .wx-tag-lg { background: var(--water); }
+.detail-hero .d-name {
+  font-size: 1.6rem;
+  font-weight: 700;
+  color: var(--ink);
+  margin-bottom: 4px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.detail-hero .d-cat {
+  font-size: .82rem;
+  color: var(--accent2);
+  font-weight: 500;
+  position: relative;
+}
+.detail-body {
+  padding: 0 22px 30px;
+}
+.field-card {
+  background: var(--bg2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius-sm);
+  padding: 14px 16px;
+  margin-bottom: 10px;
+}
+.field-card .f-label {
+  font-size: .72rem;
+  font-weight: 700;
+  color: var(--accent2);
+  letter-spacing: .04em;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  gap: 5px;
+}
+.field-card .f-label .dot {
+  width: 6px; height: 6px;
+  border-radius: 50%;
+  background: var(--accent);
+}
+.field-card .f-value {
+  font-size: .88rem;
+  color: var(--ink2);
+  line-height: 1.75;
+}
+.field-card.analysis {
+  border-left: 3px solid var(--accent);
+}
+.field-card.analysis .f-label { color: var(--accent); }
+.field-card.analysis .f-value { color: var(--ink); }
+
+/* 毒性警示 */
+.tox-alert {
+  background: rgba(192,57,43,0.08);
+  border: 1px solid rgba(192,57,43,0.2);
+  border-radius: var(--radius-sm);
+  padding: 12px 16px;
+  margin-bottom: 10px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.tox-alert .ta-icon {
+  font-size: 1.3rem;
+  flex: none;
+}
+.tox-alert .ta-text {
+  font-size: .82rem;
+  color: var(--fire);
+  font-weight: 600;
+}
+
+/* 归经标签组 */
+.meridian-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.meridian-tag {
+  padding: 3px 10px;
+  border-radius: 6px;
+  font-size: .76rem;
+  background: var(--accent-light);
+  color: var(--accent);
+  font-weight: 500;
+}
+
+/* 收藏按钮 */
+.fav-btn {
+  background: var(--bg3);
+  border: 1px solid var(--rule);
+  border-radius: 20px;
+  padding: 5px 14px;
+  font-size: .76rem;
+  color: var(--muted);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all .2s;
+}
+.fav-btn.active {
+  background: rgba(181,64,46,0.1);
+  border-color: var(--accent2);
+  color: var(--accent2);
+}
+
+/* ═══ 学堂 ═══ */
+.theory-card {
+  background: var(--bg2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.theory-card .tc-banner {
+  height: 100px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: #fff;
+  position: relative;
+  overflow: hidden;
+}
+.theory-card .tc-banner::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(circle at 70% 30%, rgba(255,255,255,0.15), transparent 50%);
+}
+.theory-card.wood .tc-banner { background: linear-gradient(135deg, var(--wood), #5DA06F); }
+.theory-card.fire .tc-banner { background: linear-gradient(135deg, var(--fire), #D44A3D); }
+.theory-card.earth .tc-banner { background: linear-gradient(135deg, var(--earth), #DBB028); }
+.theory-card.metal .tc-banner { background: linear-gradient(135deg, var(--metal), #9C8E74); }
+.theory-card.water .tc-banner { background: linear-gradient(135deg, var(--water), #3A7A99); }
+.theory-card .tc-body {
+  padding: 16px;
+}
+.theory-card .tc-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin-bottom: 6px;
+}
+.theory-card .tc-desc {
+  font-size: .82rem;
+  color: var(--muted);
+  line-height: 1.65;
+}
+.theory-card .tc-meta {
+  display: flex;
+  gap: 12px;
+  margin-top: 10px;
+  font-size: .72rem;
+  color: var(--muted2);
+}
+.theory-card .tc-meta span { display: flex; align-items: center; gap: 3px; }
+
+/* 五行总览卡 */
+.wuxing-overview {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 6px;
+  margin-bottom: 16px;
+}
+.wo-item {
+  text-align: center;
+  padding: 14px 6px;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: transform .15s;
+  border: 1.5px solid transparent;
+}
+.wo-item:active { transform: scale(.95); }
+.wo-item.wood { background: var(--wood-bg); border-color: var(--wood-border); }
+.wo-item.fire { background: var(--fire-bg); border-color: var(--fire-border); }
+.wo-item.earth { background: var(--earth-bg); border-color: var(--earth-border); }
+.wo-item.metal { background: var(--metal-bg); border-color: var(--metal-border); }
+.wo-item.water { background: var(--water-bg); border-color: var(--water-border); }
+.wo-item .wo-char {
+  font-size: 1.4rem;
+  font-weight: 700;
+  margin-bottom: 2px;
+}
+.wo-item.wood .wo-char { color: var(--wood); }
+.wo-item.fire .wo-char { color: var(--fire); }
+.wo-item.earth .wo-char { color: var(--earth); }
+.wo-item.metal .wo-char { color: var(--metal); }
+.wo-item.water .wo-char { color: var(--water); }
+.wo-item .wo-organ { font-size: .68rem; color: var(--muted); }
+.wo-item .wo-cnt { font-size: .72rem; font-weight: 600; color: var(--ink); margin-top: 4px; }
+
+/* ═══ 我的 ═══ */
+.profile-header {
+  text-align: center;
+  padding: 30px 20px 24px;
+  background: var(--bg2);
+  border-radius: var(--radius);
+  margin-bottom: 16px;
+  border: 1px solid var(--rule);
+}
+.profile-header .avatar {
+  width: 64px; height: 64px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), #4A8B5C);
+  margin: 0 auto 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  color: #fff;
+}
+.profile-header .ph-name { font-size: 1.1rem; font-weight: 700; margin-bottom: 4px; }
+.profile-header .ph-sub { font-size: .78rem; color: var(--muted); }
+.profile-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-top: 16px;
+}
+.ph-stat {
+  text-align: center;
+  padding: 10px 6px;
+  background: var(--bg);
+  border-radius: var(--radius-sm);
+}
+.ph-stat .n { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+.ph-stat .l { font-size: .68rem; color: var(--muted); margin-top: 2px; }
+
+.menu-list {
+  background: var(--bg2);
+  border: 1px solid var(--rule);
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin-bottom: 14px;
+}
+.menu-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--rule);
+  transition: background .15s;
+}
+.menu-item:last-child { border-bottom: none; }
+.menu-item:active { background: var(--bg3); }
+.menu-item .mi-icon {
+  width: 32px; height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.1rem;
+  flex: none;
+}
+.menu-item .mi-label { flex: 1; font-size: .9rem; font-weight: 500; }
+.menu-item .mi-arrow { color: var(--muted2); font-size: .8rem; }
+.menu-item .mi-count {
+  font-size: .76rem;
+  color: var(--muted);
+  background: var(--bg3);
+  padding: 2px 8px;
+  border-radius: 8px;
+}
+
+/* 收藏列表 */
+.fav-list { display: grid; gap: 10px; }
+
+/* 响应式 */
+@media (max-width: 480px) {
+  #app { box-shadow: none; }
+}

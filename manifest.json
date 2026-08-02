@@ -1,0 +1,24 @@
+{
+  "name": "中药五行分类学习",
+  "short_name": "中药五行",
+  "description": "收录418味中药的五行分类学习工具，含性味归经、功效解析、五行理论",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#F6F4EE",
+  "theme_color": "#2F7D5B",
+  "icons": [
+    {
+      "src": "assets/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "assets/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}
